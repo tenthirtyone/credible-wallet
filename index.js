@@ -53,7 +53,7 @@ class Wallet {
     const factory = new this.ethers.ContractFactory(abi, bytecode, this.wallet);
     let contract;
     try {
-      contract = await factory.deploy("Credible", "CRD");
+      contract = await factory.deploy("Credible", "CRED");
     } catch (e) {
       return console.log(e);
     }
@@ -78,7 +78,7 @@ class Wallet {
     const contract = new this.ethers.Contract(address, abi, this.provider);
     const contractWithSigner = contract.connect(this.wallet);
 
-    const bytes32 = this.ethers.utils.formatBytes32String(asset);
+    const bytes32 = asset;
 
     const tx = await contractWithSigner.mint(uri, bytes32);
 
