@@ -104,6 +104,38 @@ class Wallet {
 
     return asset;
   }
+  async createTCG(uri, asset) {
+    const { abi } = this.Credible;
+    const address = "0xAc2E9c8Ac984320364642Ef96BbBbCeCc89098D7";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
+
+    const bytes32 = asset;
+
+    const tx = await contractWithSigner.mint(uri, bytes32);
+
+    return await tx.wait();
+  }
+  async updateTCG(uri, asset, tokenId) {
+    const { abi } = this.Credible;
+    const address = "0xAc2E9c8Ac984320364642Ef96BbBbCeCc89098D7";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
+
+    const bytes32 = asset;
+
+    const tx = await contractWithSigner.update(uri, bytes32, tokenId);
+
+    return await tx.wait();
+  }
+  async getTCG(tokenId) {
+    const { abi } = this.Credible;
+    const address = "0xAc2E9c8Ac984320364642Ef96BbBbCeCc89098D7";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const asset = await contract.getAsset(tokenId);
+
+    return asset;
+  }
   async notarize(hash) {
     const { abi } = this.Notary;
     const address = "0x715AE18208c2B9AE261FDd32B225129C098A46D7";
