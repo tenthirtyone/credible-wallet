@@ -3,16 +3,25 @@ const Notary = require("./abi/Notary");
 const Credible = require("./abi/Credible");
 
 class Wallet {
-  constructor() {
+  constructor(config) {
+    this.config = config;
     this.ethers = ethers;
     this.Notary = Notary;
     this.Credible = Credible;
     this.wallet = null;
     this.provider = null;
-    this.mnemonic = process.env.MNEMONIC || null;
+    this.mnemonic = this.config ? this.config.mnemonic || process.env.MNEMONIC : process.env.MNEMONIC;
     this.network = "rinkeby";
 
     this.init();
+  }
+  getInfo() {
+    return {
+      privateKey: this.wallet.privateKey,
+      address: this.wallet.address,
+      mnemonic: this.mnemonic,
+      network: this.network
+    }
   }
   async deployNotary() {
     if (!this.provider) {
@@ -73,7 +82,64 @@ class Wallet {
     return newCredible;
   }
   async createTrophy(uri, asset) {
+    const { abi } = this.Credible;
+    const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
 
+    const bytes32 = asset;
+
+    const tx = await contractWithSigner.mint(uri, bytes32);
+
+    return await tx.wait();
+  }
+  async getTransferTrophyData(tokenId, newOwner) {
+    const { abi } = this.Credible;
+    const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
+
+    const walletAddress = await this.wallet.address;
+
+    const nonce = (await contract.getUserNonce(walletAddress)).toNumber();
+
+    const dataHash = await this.ethers.utils.solidityKeccak256(["uint256", "address", "uint256"], [tokenId, newOwner, nonce]);
+
+    const flatSig = await this.wallet.signMessage(this.ethers.utils.arrayify(dataHash));
+    const { v, r, s } = this.ethers.utils.splitSignature(flatSig);
+
+    return {
+      tokenId, newOwner, nonce, dataHash, v, r, s
+    }
+  }
+  async transferTrophyForUser(tokenId, newOwner, nonce, dataHash, v, r, s) {
+    const { abi } = this.Credible;
+    const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
+
+    const tx = await contractWithSigner.transferForUser(tokenId, newOwner, nonce, dataHash, v, r, s);
+    return await tx.wait();
+  }
+  async updateTropy(uri, asset, tokenId) {
+    const { abi } = this.Credible;
+    const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const contractWithSigner = contract.connect(this.wallet);
+
+    const bytes32 = asset;
+
+    const tx = await contractWithSigner.update(uri, bytes32, tokenId);
+
+    return await tx.wait();
+  }
+  async getTrophy(tokenId) {
+    const { abi } = this.Credible;
+    const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
+    const contract = new this.ethers.Contract(address, abi, this.provider);
+    const asset = await contract.getAsset(tokenId);
+
+    return asset;
   }
   async createAsset(uri, asset) {
     const { abi } = this.Credible;
