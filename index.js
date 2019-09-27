@@ -72,6 +72,9 @@ class Wallet {
 
     return newCredible;
   }
+  async createTrophy(uri, asset) {
+
+  }
   async createAsset(uri, asset) {
     const { abi } = this.Credible;
     const address = "0xB5c61b66eeC8F7633A055c6De6f573e63E928182";
