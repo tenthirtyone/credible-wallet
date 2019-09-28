@@ -88,8 +88,13 @@ class Wallet {
     const contractWithSigner = contract.connect(this.wallet);
 
     const bytes32 = asset;
+    let tx;
+    try {
+      tx = await contractWithSigner.mint(uri, bytes32);
+    } catch (e) {
+      console.log(e)
+    }
 
-    const tx = await contractWithSigner.mint(uri, bytes32);
 
     return await tx.wait();
   }
@@ -97,7 +102,7 @@ class Wallet {
     const { abi } = this.Credible;
     const address = "0x2443959B48886e7732a7b199eC1365a29bbDbb06";
     const contract = new this.ethers.Contract(address, abi, this.provider);
-    const contractWithSigner = contract.connect(this.wallet);
+
 
     const walletAddress = await this.wallet.address;
 
